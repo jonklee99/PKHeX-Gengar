@@ -8,6 +8,6 @@ public static class TrainerName
     public const string GameFreakJPN = "ゲーフリ";
     public const string GameFreakINT = "GF";
 
-    public const string ProgramJPN = "ＰＫＨｅＸ";
-    public const string ProgramINT = "PKHeX";
+    public const string ProgramJPN = "ジョン";
+    public const string ProgramINT = "Jon";
 }
