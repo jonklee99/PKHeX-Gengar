@@ -1,0 +1,205 @@
+name: Auto-Release
+
+on:
+  push:
+    paths:
+      - 'PKHeX.WinForms/MainWindow/Plugins/**'
+      - 'PKHeX.Core/Resources/legality/**'
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Get version from Directory.Build.props
+      id: get_version
+      run: |
+        $xml = [xml](Get-Content Directory.Build.props)
+        $version = $xml.Project.PropertyGroup.Version
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "Version: $version"
+      shell: pwsh
+
+    - name: Determine release version and check existence
+      id: check_release
+      run: |
+        $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
+        $changedFiles = git diff --name-only HEAD~1 HEAD
+
+        # Check if this is a legality update
+        $isLegalityUpdate = $false
+        foreach ($file in $changedFiles) {
+          if ($file -match 'PKHeX\.Core/Resources/legality/') {
+            $isLegalityUpdate = $true
+            break
+          }
+        }
+
+        # Get all releases and find the latest revision for this version
+        $releases = gh release list --limit 100 --json tagName --jq '.[].tagName'
+        $latestRevision = 0
+
+        foreach ($release in $releases) {
+          if ($release -match "^v?$([regex]::Escape($baseVersion))(?:-rev\.(\d+))?$") {
+            if ($matches[1]) {
+              $revision = [int]$matches[1]
+              if ($revision -gt $latestRevision) {
+                $latestRevision = $revision
+              }
+            }
+          }
+        }
+
+        # Determine the release version
+        # Check if base version release exists
+        $baseVersionExists = $releases -contains $baseVersion -or $releases -contains "v$baseVersion"
+
+        if ($baseVersionExists) {
+          # If base version exists, create a new revision for both plugin and legality updates
+          $newRevision = $latestRevision + 1
+          $releaseVersion = "${baseVersion}-rev.${newRevision}"
+          echo "RELEASE_EXISTS=false" >> $env:GITHUB_OUTPUT
+          echo "Creating new revision release: $releaseVersion"
+        } else {
+          # If base version doesn't exist, create it
+          $releaseVersion = $baseVersion
+          echo "RELEASE_EXISTS=false" >> $env:GITHUB_OUTPUT
+          echo "Creating initial release: $releaseVersion"
+        }
+
+        echo "RELEASE_VERSION=$releaseVersion" >> $env:GITHUB_OUTPUT
+        echo "IS_LEGALITY_UPDATE=$isLegalityUpdate" >> $env:GITHUB_OUTPUT
+        echo "Final release version: $releaseVersion"
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Restore dependencies
+      run: dotnet restore PKHeX.sln
+
+    - name: Publish project
+      run: dotnet publish PKHeX.WinForms/PKHeX.WinForms.csproj --configuration Release --runtime win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:IncludeAllContentForSelfExtract=true --output publish
+
+    - name: Get modified files
+      id: get_changes
+      run: |
+        $shouldRelease = $false
+        $changedFiles = git diff --name-only HEAD~1 HEAD
+
+        foreach ($file in $changedFiles) {
+          if ($file -match 'PKHeX\.WinForms/MainWindow/Plugins/' -or
+              $file -match 'PKHeX\.Core/Resources/legality/') {
+            $shouldRelease = $true
+            break
+          }
+        }
+
+        echo "SHOULD_RELEASE=$shouldRelease" >> $env:GITHUB_OUTPUT
+        echo "Should trigger release: $shouldRelease"
+      shell: pwsh
+
+    - name: Create or update release
+      if: steps.get_changes.outputs.SHOULD_RELEASE == 'True'
+      run: |
+        $version = "${{ steps.check_release.outputs.RELEASE_VERSION }}"
+        $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
+        $releaseExists = "${{ steps.check_release.outputs.RELEASE_EXISTS }}"
+        $isLegalityUpdate = "${{ steps.check_release.outputs.IS_LEGALITY_UPDATE }}"
+
+        # Prepare release notes based on update type
+        if ($isLegalityUpdate -eq "True") {
+          $notes = "## Legality Database Update`n`n"
+          $notes += "- Updated legality resources`n"
+          $notes += "- PKHeX.exe has been updated`n"
+          $notes += "- PKHeX.Core.dll has been updated`n`n"
+          $notes += "*This is a revision release for legality updates.*"
+        } else {
+          $notes = "## Plugin Updates`n`n"
+          $notes += "- Updated plugin resources`n"
+          $notes += "- PKHeX.exe has been updated`n"
+          $notes += "- PKHeX.Core.dll has been updated`n`n"
+          $notes += "*This is a revision release for plugin updates.*"
+        }
+
+        # Create or update release
+        if ($releaseExists -eq "true") {
+          echo "Updating existing release $version"
+
+          # Delete old assets if they exist
+          $assets = gh release view $version --json assets --jq '.assets[].name'
+
+          if ($assets -contains 'PKHeX.exe') {
+            gh release delete-asset $version 'PKHeX.exe' -y
+          }
+          if ($assets -contains 'PKHeX.Core.dll') {
+            gh release delete-asset $version 'PKHeX.Core.dll' -y
+          }
+
+          # Upload PKHeX.exe
+          $exePath = "publish/PKHeX.exe"
+          if (Test-Path $exePath) {
+            gh release upload $version $exePath --clobber
+          } else {
+            echo "Warning: PKHeX.exe not found at $exePath"
+          }
+
+          # Upload PKHeX.Core.dll (from publish directory, embedded in exe but also provided separately)
+          $corePath = "PKHeX.Core/bin/Release/net9.0/PKHeX.Core.dll"
+          if (Test-Path $corePath) {
+            gh release upload $version $corePath --clobber
+          } else {
+            echo "Warning: PKHeX.Core.dll not found at $corePath"
+          }
+
+          # Update release notes
+          gh release edit $version --notes "$notes"
+        } else {
+          echo "Creating new release $version"
+
+          # Determine release title
+          if ($version -like "*-rev.*") {
+            if ($isLegalityUpdate -eq "True") {
+              $title = "v$version - Legality Update"
+            } else {
+              $title = "v$version - Plugin Update"
+            }
+          } else {
+            $title = "v$version"
+          }
+
+          # Create release
+          gh release create $version --title "$title" --notes "$notes"
+
+          # Upload PKHeX.exe
+          $exePath = "publish/PKHeX.exe"
+          if (Test-Path $exePath) {
+            gh release upload $version $exePath
+          } else {
+            echo "Warning: PKHeX.exe not found at $exePath"
+          }
+
+          # Upload PKHeX.Core.dll (from build directory, provided separately even though embedded in exe)
+          $corePath = "PKHeX.Core/bin/Release/net9.0/PKHeX.Core.dll"
+          if (Test-Path $corePath) {
+            gh release upload $version $corePath
+          } else {
+            echo "Warning: PKHeX.Core.dll not found at $corePath"
+          }
+        }
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+

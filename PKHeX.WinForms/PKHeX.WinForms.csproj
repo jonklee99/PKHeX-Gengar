@@ -58,4 +58,34 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="MainWindow\Plugins\AutoModPlugins.dll" />
+    <None Remove="MainWindow\Plugins\PLZASeedFinderPlugin.dll" />
+    <None Remove="MainWindow\Plugins\SpindaPatternPlugin.dll" />
+    <None Remove="MainWindow\Plugins\SVSeedFinderPlugin.dll" />
+    <None Remove="MainWindow\Plugins\SWSHSeedFinderPlugin.dll" />
+    <None Remove="MainWindow\Plugins\PKHeX.Plugin.LivingDex.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="MainWindow\Plugins\AutoModPlugins.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow\Plugins\PLZASeedFinderPlugin.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow\Plugins\SpindaPatternPlugin.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow\Plugins\SVSeedFinderPlugin.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow\Plugins\SWSHSeedFinderPlugin.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWindow\Plugins\PKHeX.Plugin.LivingDex.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

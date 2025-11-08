@@ -58,6 +58,7 @@ internal static class Program
         var settings = Settings;
         settings.LocalResources.SetLocalPath(WorkingDirectory);
         StartupUtil.ReloadSettings(settings);
+        RegisterCustomNamers();
 
         SplashScreen? splash = null;
         if (!settings.Startup.SkipSplashScreen)
@@ -102,6 +103,11 @@ internal static class Program
             main.AttachPlugins();
         main.LoadInitialFiles(startup);
         Application.Run(main);
+    }
+
+    private static void RegisterCustomNamers()
+    {
+        EntityFileNamer.AvailableNamers.Add(new GengarNamer());
     }
 
     private static ReadOnlySpan<char> GetSaneVersionTag(ReadOnlySpan<char> productVersion)

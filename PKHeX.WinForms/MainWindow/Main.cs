@@ -190,6 +190,13 @@ public partial class Main : Form
         try
         {
             PluginLoadResult = PluginLoader.LoadPlugins(folder, Plugins, Settings.Startup.PluginLoadMerged);
+
+            // Also load plugins from MainWindow/Plugins directory
+            var customPluginFolder = Path.Combine(Application.StartupPath, "MainWindow", "Plugins");
+            if (Directory.Exists(customPluginFolder))
+            {
+                var customResult = PluginLoader.LoadPlugins(customPluginFolder, Plugins, Settings.Startup.PluginLoadMerged);
+            }
         }
         catch (InvalidCastException c)
         {
