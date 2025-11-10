@@ -464,7 +464,10 @@ public sealed class AbilityVerifier : Verifier
     private CheckResult VerifyBirthAbility(LegalityAnalysis data, PA9 pa9)
     {
         var enc = data.EncounterMatch;
-        var pi = PersonalTable.ZA[enc.Species, enc.Form];
+        // Use Pokemon's species if it differs from encounter (evolved after capture)
+        var species = pa9.Species != enc.Species ? pa9.Species : enc.Species;
+        var form = pa9.Species != enc.Species ? pa9.Form : enc.Form;
+        var pi = PersonalTable.ZA[species, form];
         var bitNum = pa9.AbilityNumber;
         if (!IsValidAbilityBits(bitNum))
             return INVALID;
