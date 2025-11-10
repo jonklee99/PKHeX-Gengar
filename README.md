@@ -1,5 +1,14 @@
-PKHeX
-=====
+![Screenshot 2025-11-10 151512](https://github.com/user-attachments/assets/9b116801-8935-4441-9bfe-d76192f84857)
+> [!important]
+> i hak so I made my own PKHeXth fork to tinker with.
+> It comes with plugins already installed that I and other people made, 
+> and some fixes/improvements that Lusamine keeps closing
+
+
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hexbyt3/pkhexth/total) ![GitHub Release](https://img.shields.io/github/v/release/hexbyt3/pkhexth)
+
+
+---
 <div>
   <span>English</span> / <a href=".github/README-es.md">Español</a> / <a href=".github/README-fr.md">Français</a> / <a href=".github/README-de.md">Deutsch</a> / <a href=".github/README-it.md">Italiano</a> / <a href=".github/README-ko.md">한국어</a> / <a href=".github/README-zh-Hant.md">繁體中文</a> / <a href=".github/README-zh-Hans.md">简体中文</a>
 </div>
