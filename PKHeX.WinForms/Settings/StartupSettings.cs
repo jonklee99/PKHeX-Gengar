@@ -33,7 +33,7 @@ public sealed class StartupSettings : IStartupSettings
     public bool PluginLoadEnable { get; set; } = true;
 
     [LocalizedDescription("Loads any plugins that were merged into the main executable file.")]
-    public bool PluginLoadMerged { get; set; }
+    public bool PluginLoadMerged { get; set; } = true;
 
     [Browsable(false)]
     public List<string> RecentlyLoaded { get; set; } = new(DefaultMaxRecent);

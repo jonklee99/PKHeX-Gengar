@@ -184,11 +184,10 @@ public partial class Main : Form
         var folder = Settings.LocalResources.GetPluginPath();
         if (Plugins.Count != 0)
             return; // already loaded
-        if (!Directory.Exists(folder))
-            return;
 
         try
         {
+            // Load plugins from the configured plugins folder (if it exists) and merged plugins
             PluginLoadResult = PluginLoader.LoadPlugins(folder, Plugins, Settings.Startup.PluginLoadMerged);
 
             // Also load plugins from MainWindow/Plugins directory
