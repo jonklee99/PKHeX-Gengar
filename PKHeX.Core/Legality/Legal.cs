@@ -7,17 +7,17 @@ namespace PKHeX.Core;
 /// </summary>
 public static class Legal
 {
-    public const int MaxSpeciesID_1 = 151;
+    internal const int MaxSpeciesID_1 = 151;
     internal const int MaxMoveID_1 = 165;
     internal const int MaxItemID_1 = 255;
     internal const int MaxAbilityID_1 = 0;
 
-    public const int MaxSpeciesID_2 = 251;
+    internal const int MaxSpeciesID_2 = 251;
     internal const int MaxMoveID_2 = 251;
     internal const int MaxItemID_2 = 255;
     internal const int MaxAbilityID_2 = 0;
 
-    public const int MaxSpeciesID_3 = 386;
+    internal const int MaxSpeciesID_3 = 386;
     internal const int MaxMoveID_3 = 354;
     internal const int MaxItemID_3 = 374;
     internal const int MaxItemID_3_E = 376;
@@ -27,7 +27,7 @@ public static class Legal
     internal const int MaxBallID_3 = 0xC;
     internal const GameVersion MaxGameID_3 = GameVersion.CXD;
 
-    public const int MaxSpeciesID_4 = 493;
+    internal const int MaxSpeciesID_4 = 493;
     internal const int MaxMoveID_4 = 467;
     internal const int MaxItemID_4_DP = 464;
     internal const int MaxItemID_4_Pt = 467;
@@ -36,7 +36,7 @@ public static class Legal
     internal const int MaxBallID_4 = 0x18;
     internal const GameVersion MaxGameID_4 = GameVersion.CXD;
 
-    public const int MaxSpeciesID_5 = 649;
+    internal const int MaxSpeciesID_5 = 649;
     internal const int MaxMoveID_5 = 559;
     internal const int MaxItemID_5_BW = 632;
     internal const int MaxItemID_5_B2W2 = 638;
@@ -44,7 +44,7 @@ public static class Legal
     internal const int MaxBallID_5 = 0x19;
     internal const GameVersion MaxGameID_5 = GameVersion.B2;
 
-    public const int MaxSpeciesID_6 = 721;
+    internal const int MaxSpeciesID_6 = 721;
     internal const int MaxMoveID_6_XY = 617;
     internal const int MaxMoveID_6_AO = 621;
     internal const int MaxItemID_6_XY = 717;
@@ -54,19 +54,19 @@ public static class Legal
     internal const int MaxBallID_6 = 0x19;
     internal const GameVersion MaxGameID_6 = GameVersion.OR;
 
-    public const int MaxSpeciesID_7 = 802;
+    internal const int MaxSpeciesID_7 = 802;
     internal const int MaxMoveID_7 = 719;
     internal const int MaxItemID_7 = 920;
     internal const int MaxAbilityID_7 = 232;
     internal const int MaxBallID_7 = 0x1A; // 26
     internal const GameVersion MaxGameID_7 = GameVersion.C;
 
-    public const int MaxSpeciesID_7_USUM = 807;
+    internal const int MaxSpeciesID_7_USUM = 807;
     internal const int MaxMoveID_7_USUM = 728;
     internal const int MaxItemID_7_USUM = 959;
     internal const int MaxAbilityID_7_USUM = 233;
 
-    public const int MaxSpeciesID_7b = 809; // Melmetal
+    internal const int MaxSpeciesID_7b = 809; // Melmetal
     internal const int MaxMoveID_7b = 742; // Double Iron Bash
     internal const int MaxItemID_7b = 1057; // Magmar Candy
     internal const int MaxBallID_7b = (int)Ball.Beast;
@@ -74,25 +74,25 @@ public static class Legal
     internal const int MaxAbilityID_7b = MaxAbilityID_7_USUM;
 
     // Current Binaries
-    public const int MaxSpeciesID_8 = MaxSpeciesID_8_R2;
+    internal const int MaxSpeciesID_8 = MaxSpeciesID_8_R2;
     internal const int MaxMoveID_8 = MaxMoveID_8_R2;
     internal const int MaxItemID_8 = MaxItemID_8_R2;
     internal const int MaxAbilityID_8 = MaxAbilityID_8_R2;
 
     // Orion (No DLC)
-    public const ushort MaxSpeciesID_8_O0 = 890; // Eternatus
+    internal const ushort MaxSpeciesID_8_O0 = 890; // Eternatus
     internal const ushort MaxMoveID_8_O0 = 796; // Steel Beam
     internal const ushort MaxItemID_8_O0 = 1278; // Rotom Catalog, ignore all catalog parts
     internal const ushort MaxAbilityID_8_O0 = 258; // Hunger Switch
 
     // Rigel 1 (DLC 1: Isle of Armor)
-    public const ushort MaxSpeciesID_8_R1 = 893; // Zarude
+    internal const ushort MaxSpeciesID_8_R1 = 893; // Zarude
     internal const ushort MaxMoveID_8_R1 = 818; // Surging Strikes
     internal const ushort MaxItemID_8_R1 = 1589; // Mark Charm
     internal const ushort MaxAbilityID_8_R1 = 260; // Unseen Fist
 
     // Rigel 2 (DLC 2: Crown Tundra)
-    public const ushort MaxSpeciesID_8_R2 = 898; // Calyrex
+    internal const ushort MaxSpeciesID_8_R2 = 898; // Calyrex
     internal const ushort MaxMoveID_8_R2 = 826; // Eerie Spell
     internal const ushort MaxItemID_8_R2 = 1607; // Reins of Unity
     internal const ushort MaxAbilityID_8_R2 = 267; // As One (Glastrier)
@@ -100,43 +100,54 @@ public static class Legal
     internal const int MaxBallID_8 = 0x1A; // 26 Beast
     internal const GameVersion MaxGameID_8 = GameVersion.SH;
 
-    public const int MaxSpeciesID_8a = (int)Species.Enamorus;
+    internal const int MaxSpeciesID_8a = (int)Species.Enamorus;
     internal const int MaxMoveID_8a = (int)Move.TakeHeart;
     internal const int MaxItemID_8a = 1828; // Legend Plate
     internal const int MaxBallID_8a = (int)Ball.LAOrigin;
     internal const int MaxAbilityID_8a = MaxAbilityID_8_R2;
 
-    public const int MaxSpeciesID_8b = MaxSpeciesID_4; // Arceus-493
+    internal const int MaxSpeciesID_8b = MaxSpeciesID_4; // Arceus-493
     internal const int MaxMoveID_8b = MaxMoveID_8_R2;
     internal const int MaxItemID_8b = 1822; // DS Sounds
     internal const int MaxBallID_8b = (int)Ball.LAOrigin;
     internal const int MaxAbilityID_8b = MaxAbilityID_8_R2;
 
-    public const ushort MaxSpeciesID_9 = MaxSpeciesID_9_T2;
+    internal const ushort MaxSpeciesID_9 = MaxSpeciesID_9_T2;
     internal const ushort MaxMoveID_9 = MaxMoveID_9_T2;
     internal const ushort MaxItemID_9 = MaxItemID_9_T2;
     internal const ushort MaxAbilityID_9 = MaxAbilityID_9_T2;
 
-    public const ushort MaxSpeciesID_9_T0 = (int)Species.IronLeaves;
+    internal const ushort MaxSpeciesID_9_T0 = (int)Species.IronLeaves;
     internal const ushort MaxMoveID_9_T0 = (int)Move.MagicalTorque;
     internal const ushort MaxItemID_9_T0 = 2400; // Yellow Dish
     internal const ushort MaxAbilityID_9_T0 = (int)Ability.MyceliumMight;
 
-    public const ushort MaxSpeciesID_9_T1 = (int)Species.Ogerpon;
+    internal const ushort MaxSpeciesID_9_T1 = (int)Species.Ogerpon;
     internal const ushort MaxMoveID_9_T1 = (int)Move.IvyCudgel;
     internal const ushort MaxItemID_9_T1 = 2481; // Glimmering Charm
     internal const ushort MaxAbilityID_9_T1 = (int)Ability.SupersweetSyrup;
 
-    public const ushort MaxSpeciesID_9_T2 = (int)Species.Pecharunt;
+    internal const ushort MaxSpeciesID_9_T2 = (int)Species.Pecharunt;
     internal const ushort MaxMoveID_9_T2 = (int)Move.MalignantChain;
     internal const ushort MaxItemID_9_T2 = 2557; // Briar’s Book
     internal const ushort MaxAbilityID_9_T2 = (int)Ability.PoisonPuppeteer;
 
-    public const int MaxSpeciesID_9a = (int)Species.Falinks;
-    internal const int MaxMoveID_9a = (int)Move.NihilLight;
-    internal const int MaxItemID_9a = 2634; // Blue Canari Plush
-    internal const int MaxAbilityID_9a = (int)Ability.PoisonPuppeteer;
-    internal const int MaxBallID_9a = (int)Ball.LAOrigin;
+    internal const int MaxSpeciesID_9a = MaxSpeciesID_9a_MD;
+    internal const int MaxMoveID_9a = MaxMoveID_9a_IK;
+    internal const int MaxItemID_9a = MaxItemID_9a_MD;
+    internal const int MaxAbilityID_9a = MaxAbilityID_9a_IK;
+    internal const int MaxBallID_9a = MaxBallID_9a_IK;
+
+    internal const int MaxSpeciesID_9a_IK = (int)Species.Falinks;
+    internal const int MaxMoveID_9a_IK = (int)Move.NihilLight;
+    internal const int MaxItemID_9a_IK = 2634; // Blue Canari Plush
+    internal const int MaxAbilityID_9a_IK = (int)Ability.PoisonPuppeteer;
+    internal const int MaxBallID_9a_IK = (int)Ball.LAOrigin;
+
+    internal const int MaxSpeciesID_9a_MD = (int)Species.Gholdengo;
+    internal const int MaxMoveID_9a_MD = MaxMoveID_9a_IK;
+    internal const int MaxItemID_9a_MD = 2684; // Canari Bread
+    internal const int MaxAbilityID_9a_MD = MaxAbilityID_9a_IK;
 
     internal const int MaxBallID_9 = (int)Ball.LAOrigin;
     internal const GameVersion MaxGameID_HOME = GameVersion.VL; // TODO HOME ZA - Replace with ZA when HOME; if backwards transfer is allowed. If prevented, rename epoch as HOME1.
