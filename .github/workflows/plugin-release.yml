@@ -3,6 +3,7 @@ name: Auto-Release
 on:
   push:
     paths:
+      - 'Directory.Build.props'
       - 'PKHeX.WinForms/MainWindow/Plugins/**'
       - 'PKHeX.Core/Resources/legality/**'
     branches:
@@ -39,12 +40,20 @@ jobs:
         $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
         $changedFiles = git diff --name-only HEAD~1 HEAD
 
-        # Check if this is a legality update
+        # Check what type of update this is
+        $isVersionUpdate = $false
         $isLegalityUpdate = $false
+        $isPluginUpdate = $false
+
         foreach ($file in $changedFiles) {
+          if ($file -eq 'Directory.Build.props') {
+            $isVersionUpdate = $true
+          }
           if ($file -match 'PKHeX\.Core/Resources/legality/') {
             $isLegalityUpdate = $true
-            break
+          }
+          if ($file -match 'PKHeX\.WinForms/MainWindow/Plugins/') {
+            $isPluginUpdate = $true
           }
         }
 
@@ -67,8 +76,13 @@ jobs:
         # Check if base version release exists
         $baseVersionExists = $releases -contains $baseVersion -or $releases -contains "v$baseVersion"
 
-        if ($baseVersionExists) {
-          # If base version exists, create a new revision for both plugin and legality updates
+        if ($isVersionUpdate -and -not $baseVersionExists) {
+          # Version changed and no release exists for this version - create base release
+          $releaseVersion = $baseVersion
+          echo "RELEASE_EXISTS=false" >> $env:GITHUB_OUTPUT
+          echo "Creating new version release: $releaseVersion"
+        } elseif ($baseVersionExists) {
+          # If base version exists, create a new revision for plugin and legality updates
           $newRevision = $latestRevision + 1
           $releaseVersion = "${baseVersion}-rev.${newRevision}"
           echo "RELEASE_EXISTS=false" >> $env:GITHUB_OUTPUT
@@ -81,7 +95,9 @@ jobs:
         }
 
         echo "RELEASE_VERSION=$releaseVersion" >> $env:GITHUB_OUTPUT
+        echo "IS_VERSION_UPDATE=$isVersionUpdate" >> $env:GITHUB_OUTPUT
         echo "IS_LEGALITY_UPDATE=$isLegalityUpdate" >> $env:GITHUB_OUTPUT
+        echo "IS_PLUGIN_UPDATE=$isPluginUpdate" >> $env:GITHUB_OUTPUT
         echo "Final release version: $releaseVersion"
       shell: pwsh
       env:
@@ -100,7 +116,8 @@ jobs:
         $changedFiles = git diff --name-only HEAD~1 HEAD
 
         foreach ($file in $changedFiles) {
-          if ($file -match 'PKHeX\.WinForms/MainWindow/Plugins/' -or
+          if ($file -eq 'Directory.Build.props' -or
+              $file -match 'PKHeX\.WinForms/MainWindow/Plugins/' -or
               $file -match 'PKHeX\.Core/Resources/legality/') {
             $shouldRelease = $true
             break
@@ -117,10 +134,17 @@ jobs:
         $version = "${{ steps.check_release.outputs.RELEASE_VERSION }}"
         $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
         $releaseExists = "${{ steps.check_release.outputs.RELEASE_EXISTS }}"
+        $isVersionUpdate = "${{ steps.check_release.outputs.IS_VERSION_UPDATE }}"
         $isLegalityUpdate = "${{ steps.check_release.outputs.IS_LEGALITY_UPDATE }}"
+        $isPluginUpdate = "${{ steps.check_release.outputs.IS_PLUGIN_UPDATE }}"
 
         # Prepare release notes based on update type
-        if ($isLegalityUpdate -eq "True") {
+        if ($isVersionUpdate -eq "True" -and $version -eq $baseVersion) {
+          $notes = "## Release v$version`n`n"
+          $notes += "- PKHeX.exe has been updated`n"
+          $notes += "- PKHeX.Core.dll has been updated`n`n"
+          $notes += "*New version release.*"
+        } elseif ($isLegalityUpdate -eq "True") {
           $notes = "## Legality Database Update`n`n"
           $notes += "- Updated legality resources`n"
           $notes += "- PKHeX.exe has been updated`n"

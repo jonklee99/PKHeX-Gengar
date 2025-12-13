@@ -1,0 +1,110 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        default: ''
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Get version from Directory.Build.props
+      id: get_version
+      run: |
+        $xml = [xml](Get-Content Directory.Build.props)
+        $version = $xml.Project.PropertyGroup.Version
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "Version: $version"
+      shell: pwsh
+
+    - name: Check if release exists
+      id: check_release
+      run: |
+        $version = "${{ steps.get_version.outputs.VERSION }}"
+        $releases = gh release list --limit 100 --json tagName --jq '.[].tagName'
+        $exists = $releases -contains $version -or $releases -contains "v$version"
+        echo "RELEASE_EXISTS=$exists" >> $env:GITHUB_OUTPUT
+        echo "Release exists: $exists"
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Restore dependencies
+      run: dotnet restore PKHeX.sln
+
+    - name: Publish project
+      run: dotnet publish PKHeX.WinForms/PKHeX.WinForms.csproj --configuration Release --runtime win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:IncludeAllContentForSelfExtract=true --output publish
+
+    - name: Create or update release
+      run: |
+        $version = "${{ steps.get_version.outputs.VERSION }}"
+        $releaseExists = "${{ steps.check_release.outputs.RELEASE_EXISTS }}"
+        $customNotes = "${{ github.event.inputs.release_notes }}"
+
+        # Prepare release notes
+        if ($customNotes) {
+          $notes = $customNotes
+        } else {
+          $notes = "## Release v$version`n`n"
+          $notes += "- PKHeX.exe has been updated`n"
+          $notes += "- PKHeX.Core.dll has been updated`n`n"
+          $notes += "*Manual release build.*"
+        }
+
+        $exePath = "publish/PKHeX.exe"
+        $corePath = "PKHeX.Core/bin/Release/net9.0/PKHeX.Core.dll"
+
+        if ($releaseExists -eq "True") {
+          echo "Updating existing release $version"
+
+          # Delete old assets if they exist
+          $assets = gh release view $version --json assets --jq '.assets[].name' 2>$null
+          if ($assets -contains 'PKHeX.exe') {
+            gh release delete-asset $version 'PKHeX.exe' -y
+          }
+          if ($assets -contains 'PKHeX.Core.dll') {
+            gh release delete-asset $version 'PKHeX.Core.dll' -y
+          }
+
+          # Upload assets
+          if (Test-Path $exePath) {
+            gh release upload $version $exePath --clobber
+          }
+          if (Test-Path $corePath) {
+            gh release upload $version $corePath --clobber
+          }
+
+          # Update release notes
+          gh release edit $version --notes "$notes"
+        } else {
+          echo "Creating new release $version"
+
+          # Create release
+          gh release create $version --title "v$version" --notes "$notes"
+
+          # Upload assets
+          if (Test-Path $exePath) {
+            gh release upload $version $exePath
+          }
+          if (Test-Path $corePath) {
+            gh release upload $version $corePath
+          }
+        }
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
