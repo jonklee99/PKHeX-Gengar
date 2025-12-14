@@ -1,8 +1,7 @@
 ![Screenshot 2025-11-10 151512](https://github.com/user-attachments/assets/9b116801-8935-4441-9bfe-d76192f84857)
 > [!important]
 > i hak so I made my own PKHeXth fork to tinker with.
-> It comes with plugins already installed that I and other people made, 
-> and some fixes/improvements that Lusamine keeps closing
+> It comes with plugins already installed that I and other people made.
 
 
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/hexbyt3/pkhexth/total) ![GitHub Release](https://img.shields.io/github/v/release/hexbyt3/pkhexth)
