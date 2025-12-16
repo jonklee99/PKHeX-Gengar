@@ -124,25 +124,17 @@ public sealed record EncounterGift9a(ushort Species, byte Form, byte Level, byte
     private void SetMoves(PA9 pk, PersonalInfo9ZA pi, byte level)
     {
         var (learn, plus) = LearnSource9ZA.GetLearnsetAndPlus(Species, Form);
-        Span<ushort> moves = stackalloc ushort[4];
+        PlusRecordApplicator.SetPlusFlagsEncounter(pk, pi, plus, level);
         if (Moves.HasMoves)
         {
             pk.SetMoves(Moves);
-            pk.GetMoves(moves);
-            PlusRecordApplicator.SetPlusFlagsEncounter(pk, pi, plus, level);
             return;
         }
 
-        if (!IsAlpha)
-        {
-            learn.SetEncounterMoves(level, moves);
-            PlusRecordApplicator.SetPlusFlagsEncounter(pk, pi, plus, level);
-        }
-        else
-        {
-            learn.SetEncounterMovesBackwards(level, moves, sameDescend: false);
-            PlusRecordApplicator.SetPlusFlagsEncounter(pk, pi, plus, level, moves[0] = pi.AlphaMove);
-        }
+        Span<ushort> moves = stackalloc ushort[4];
+        learn.SetEncounterMovesBackwards(level, moves, sameDescend: false);
+        if (pk.IsAlpha)
+            PlusRecordApplicator.SetPlusFlagsSpecific(pk, pi, moves[0] = pi.AlphaMove);
         pk.SetMoves(moves);
     }
 
@@ -253,7 +245,7 @@ public sealed record EncounterGift9a(ushort Species, byte Form, byte Level, byte
         return true;
     }
 
-    private static uint GetFixedTrainerID32(TrainerGift9a trainer) => trainer switch
+    public static uint GetFixedTrainerID32(TrainerGift9a trainer) => trainer switch
     {
         TrainerGift9a.Lucario => 912562,
         TrainerGift9a.Floette => 1,
@@ -263,7 +255,7 @@ public sealed record EncounterGift9a(ushort Species, byte Form, byte Level, byte
         _ => throw new ArgumentOutOfRangeException(nameof(trainer), trainer, null),
     };
 
-    private static byte GetFixedTrainerGender(TrainerGift9a trainer) => trainer switch
+    public static byte GetFixedTrainerGender(TrainerGift9a trainer) => trainer switch
     {
         TrainerGift9a.Lucario => 1,
         TrainerGift9a.Floette => 0,
@@ -273,7 +265,7 @@ public sealed record EncounterGift9a(ushort Species, byte Form, byte Level, byte
         _ => throw new ArgumentOutOfRangeException(nameof(trainer), trainer, null),
     };
 
-    private static string GetFixedTrainerName(TrainerGift9a trainer, int language) => trainer switch
+    public static string GetFixedTrainerName(TrainerGift9a trainer, int language) => trainer switch
     {
         TrainerGift9a.Lucario => language switch
         {
