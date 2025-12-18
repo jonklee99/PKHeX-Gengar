@@ -6,6 +6,7 @@ on:
       - 'Directory.Build.props'
       - 'PKHeX.WinForms/MainWindow/Plugins/**'
       - 'PKHeX.Core/Resources/legality/**'
+      - 'wild/**'
     branches:
       - main
       - master
@@ -49,7 +50,7 @@ jobs:
           if ($file -eq 'Directory.Build.props') {
             $isVersionUpdate = $true
           }
-          if ($file -match 'PKHeX\.Core/Resources/legality/') {
+          if ($file -match 'PKHeX\.Core/Resources/legality/' -or $file -match '^wild/') {
             $isLegalityUpdate = $true
           }
           if ($file -match 'PKHeX\.WinForms/MainWindow/Plugins/') {
@@ -118,7 +119,8 @@ jobs:
         foreach ($file in $changedFiles) {
           if ($file -eq 'Directory.Build.props' -or
               $file -match 'PKHeX\.WinForms/MainWindow/Plugins/' -or
-              $file -match 'PKHeX\.Core/Resources/legality/') {
+              $file -match 'PKHeX\.Core/Resources/legality/' -or
+              $file -match '^wild/') {
             $shouldRelease = $true
             break
           }

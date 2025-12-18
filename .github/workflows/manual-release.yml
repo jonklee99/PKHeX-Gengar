@@ -32,14 +32,43 @@ jobs:
         echo "Version: $version"
       shell: pwsh
 
-    - name: Check if release exists
+    - name: Determine release version
       id: check_release
       run: |
-        $version = "${{ steps.get_version.outputs.VERSION }}"
+        $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
+
+        # Get all releases and find the latest revision for this version
         $releases = gh release list --limit 100 --json tagName --jq '.[].tagName'
-        $exists = $releases -contains $version -or $releases -contains "v$version"
-        echo "RELEASE_EXISTS=$exists" >> $env:GITHUB_OUTPUT
-        echo "Release exists: $exists"
+        $latestRevision = 0
+        $baseVersionExists = $false
+
+        foreach ($release in $releases) {
+          # Check if base version exists
+          if ($release -eq $baseVersion -or $release -eq "v$baseVersion") {
+            $baseVersionExists = $true
+          }
+          # Check for revision releases
+          if ($release -match "^v?$([regex]::Escape($baseVersion))-rev\.(\d+)$") {
+            $revision = [int]$matches[1]
+            if ($revision -gt $latestRevision) {
+              $latestRevision = $revision
+            }
+          }
+        }
+
+        # Always create a new revision release if base version exists
+        if ($baseVersionExists -or $latestRevision -gt 0) {
+          $newRevision = $latestRevision + 1
+          $releaseVersion = "${baseVersion}-rev.${newRevision}"
+          echo "Creating new revision release: $releaseVersion"
+        } else {
+          # Base version doesn't exist, create it
+          $releaseVersion = $baseVersion
+          echo "Creating initial release: $releaseVersion"
+        }
+
+        echo "RELEASE_VERSION=$releaseVersion" >> $env:GITHUB_OUTPUT
+        echo "Final release version: $releaseVersion"
       shell: pwsh
       env:
         GH_TOKEN: ${{ github.token }}
@@ -50,15 +79,20 @@ jobs:
     - name: Publish project
       run: dotnet publish PKHeX.WinForms/PKHeX.WinForms.csproj --configuration Release --runtime win-x64 --self-contained false -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:IncludeAllContentForSelfExtract=true --output publish
 
-    - name: Create or update release
+    - name: Create release
       run: |
-        $version = "${{ steps.get_version.outputs.VERSION }}"
-        $releaseExists = "${{ steps.check_release.outputs.RELEASE_EXISTS }}"
+        $version = "${{ steps.check_release.outputs.RELEASE_VERSION }}"
+        $baseVersion = "${{ steps.get_version.outputs.VERSION }}"
         $customNotes = "${{ github.event.inputs.release_notes }}"
 
         # Prepare release notes
         if ($customNotes) {
           $notes = $customNotes
+        } elseif ($version -like "*-rev.*") {
+          $notes = "## Revision Release v$version`n`n"
+          $notes += "- PKHeX.exe has been updated`n"
+          $notes += "- PKHeX.Core.dll has been updated`n`n"
+          $notes += "*Manual revision release.*"
         } else {
           $notes = "## Release v$version`n`n"
           $notes += "- PKHeX.exe has been updated`n"
@@ -69,41 +103,28 @@ jobs:
         $exePath = "publish/PKHeX.exe"
         $corePath = "PKHeX.Core/bin/Release/net9.0/PKHeX.Core.dll"
 
-        if ($releaseExists -eq "True") {
-          echo "Updating existing release $version"
-
-          # Delete old assets if they exist
-          $assets = gh release view $version --json assets --jq '.assets[].name' 2>$null
-          if ($assets -contains 'PKHeX.exe') {
-            gh release delete-asset $version 'PKHeX.exe' -y
-          }
-          if ($assets -contains 'PKHeX.Core.dll') {
-            gh release delete-asset $version 'PKHeX.Core.dll' -y
-          }
-
-          # Upload assets
-          if (Test-Path $exePath) {
-            gh release upload $version $exePath --clobber
-          }
-          if (Test-Path $corePath) {
-            gh release upload $version $corePath --clobber
-          }
-
-          # Update release notes
-          gh release edit $version --notes "$notes"
+        # Determine release title
+        if ($version -like "*-rev.*") {
+          $title = "v$version - Manual Update"
         } else {
-          echo "Creating new release $version"
+          $title = "v$version"
+        }
 
-          # Create release
-          gh release create $version --title "v$version" --notes "$notes"
+        echo "Creating new release $version"
 
-          # Upload assets
-          if (Test-Path $exePath) {
-            gh release upload $version $exePath
-          }
-          if (Test-Path $corePath) {
-            gh release upload $version $corePath
-          }
+        # Create release
+        gh release create $version --title "$title" --notes "$notes"
+
+        # Upload assets
+        if (Test-Path $exePath) {
+          gh release upload $version $exePath
+        } else {
+          echo "Warning: PKHeX.exe not found at $exePath"
+        }
+        if (Test-Path $corePath) {
+          gh release upload $version $corePath
+        } else {
+          echo "Warning: PKHeX.Core.dll not found at $corePath"
         }
       shell: pwsh
       env:
