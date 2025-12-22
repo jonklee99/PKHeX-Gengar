@@ -1,4 +1,5 @@
 Tests/PKHeX.Core.Tests/Legality/Private/
+Directory.Build.targets.user
 
 
 #################

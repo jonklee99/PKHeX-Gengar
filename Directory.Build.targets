@@ -1,0 +1,4 @@
+<Project>
+  <!-- Import local user targets if they exist (gitignored) -->
+  <Import Project="Directory.Build.targets.user" Condition="Exists('Directory.Build.targets.user')" />
+</Project>
