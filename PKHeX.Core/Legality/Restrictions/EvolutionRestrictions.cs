@@ -10,12 +10,14 @@ namespace PKHeX.Core;
 /// <remarks>
 /// Currently only checks "is able to know a move required to level up".
 /// </remarks>
-internal static class EvolutionRestrictions
+public static class EvolutionRestrictions
 {
     /// <summary>
-    /// List of species that evolve from a previous species having a move while leveling up
+    /// Gets the move required for a species to have evolved (if it's a move-based evolution).
     /// </summary>
-    private static ushort GetSpeciesEvolutionMove(ushort species) => species switch
+    /// <param name="species">The evolved species</param>
+    /// <returns>The required move ID, EEVEE sentinel for Sylveon, or NONE if not a move evolution</returns>
+    public static ushort GetSpeciesEvolutionMove(ushort species) => species switch
     {
         (int)Sylveon => EEVEE,
         (int)MrMime => (int)Mimic,
@@ -34,6 +36,32 @@ internal static class EvolutionRestrictions
         (int)Dudunsparce => (int)HyperDrill,
         (int)Hydrapple => (int)DragonCheer,
         _ => NONE,
+    };
+
+    /// <summary>
+    /// Gets the pre-evolution species and form that learns the required move for a move-based evolution.
+    /// </summary>
+    /// <param name="species">The evolved species</param>
+    /// <returns>Tuple of (preEvoSpecies, preEvoForm), or (0, 0) if not a move evolution</returns>
+    public static (ushort Species, byte Form) GetPreEvolutionForMoveEvolution(ushort species) => species switch
+    {
+        (int)Sylveon => ((ushort)Eevee, 0),
+        (int)MrMime => ((ushort)MimeJr, 0),
+        (int)Sudowoodo => ((ushort)Bonsly, 0),
+        (int)Ambipom => ((ushort)Aipom, 0),
+        (int)Lickilicky => ((ushort)Lickitung, 0),
+        (int)Tangrowth => ((ushort)Tangela, 0),
+        (int)Yanmega => ((ushort)Yanma, 0),
+        (int)Mamoswine => ((ushort)Piloswine, 0),
+        (int)Tsareena => ((ushort)Steenee, 0),
+        (int)Grapploct => ((ushort)Clobbopus, 0),
+        (int)Wyrdeer => ((ushort)Stantler, 0),
+        (int)Overqwil => ((ushort)Qwilfish, 1), // Hisuian form
+        (int)Annihilape => ((ushort)Primeape, 0),
+        (int)Farigiraf => ((ushort)Girafarig, 0),
+        (int)Dudunsparce => ((ushort)Dunsparce, 0),
+        (int)Hydrapple => ((ushort)Dipplin, 0),
+        _ => (0, 0),
     };
 
     public static bool IsEvolvedSpeciesFormRare(uint encryptionConstant) => encryptionConstant % 100 is 0;
@@ -61,13 +89,14 @@ internal static class EvolutionRestrictions
         return species is (int)Runerigus or (int)Wyrdeer or (int)Annihilape or (int)Basculegion or (int)Kingambit or (int)Overqwil;
     }
 
-    private const ushort NONE = 0;
-    private const ushort EEVEE = ushort.MaxValue;
+    public const ushort NONE = 0;
+    public const ushort EEVEE = ushort.MaxValue;
 
     private static ReadOnlySpan<ushort> EeveeFairyMoves =>
     [
         (int)Charm,
         (int)BabyDollEyes,
+        (int)DisarmingVoice, // Z-A
     ];
 
     /// <summary>
@@ -90,34 +119,23 @@ internal static class EvolutionRestrictions
         var move = GetSpeciesEvolutionMove(species);
         if (move is NONE)
             return true; // not a move evolution
-        if (move is EEVEE)
-            return IsValidEvolutionWithMoveSylveon(pk, enc, info);
         if (!IsMoveSlotAvailable(info.Moves))
             return false;
-
-        if (pk.HasMove(move))
-            return true;
 
         // Check the entire chain to see if it could have learnt it at any point.
         var head = LearnGroupUtil.GetCurrentGroup(pk);
-        return MemoryPermissions.GetCanKnowMove(enc, move, info.EvoChainsAllGens, pk, head);
+        var pruned = info.EvoChainsAllGens.PruneKeepPreEvolutions(species);
+        if (move is EEVEE)
+            return IsValidEvolutionWithMoveAny(enc, EeveeFairyMoves, pruned, pk, head);
+
+        return MemoryPermissions.GetCanKnowMove(enc, move, pruned, pk, head);
     }
 
-    private static bool IsValidEvolutionWithMoveSylveon(PKM pk, IEncounterTemplate enc, LegalInfo info)
+    private static bool IsValidEvolutionWithMoveAny(IEncounterTemplate enc, ReadOnlySpan<ushort> any, EvolutionHistory history, PKM pk, ILearnGroup head)
     {
-        if (!IsMoveSlotAvailable(info.Moves))
-            return false;
-
-        foreach (var move in EeveeFairyMoves)
+        foreach (var move in any)
         {
-            if (pk.HasMove(move))
-                return true;
-        }
-
-        var head = LearnGroupUtil.GetCurrentGroup(pk);
-        foreach (var move in EeveeFairyMoves)
-        {
-            if (MemoryPermissions.GetCanKnowMove(enc, move, info.EvoChainsAllGens, pk, head))
+            if (MemoryPermissions.GetCanKnowMove(enc, move, history, pk, head))
                 return true;
         }
         return false;
